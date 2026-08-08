@@ -109,29 +109,17 @@ seamlessly.
 
 ---
 
-## 5. Google sign-in — already set up ✅
+## 5. Google sign-in — not set up yet
 
-Sign-in is **live**. Click "Sign in with Google" on the site and it works. Signing in adds your
-name to the patterns you publish, gives you a profile page, and lets you like and comment.
-The site still works fine for signed-out visitors: they can browse, open, fork and publish.
+Sign-in is **off** in this copy. Clicking "Sign in with Google" shows a short "not configured
+yet" page. Everything else works: visitors can browse, open, fork and publish patterns —
+they just publish anonymously, with no profile page, likes or comments.
 
-What is already in place (you don't need to redo any of it):
+The original deployment used an OAuth client belonging to a different Google account, so its
+client ID was removed from `wrangler.jsonc`. To turn sign-in on you create your own client
+(free, about ten minutes) — the steps are below.
 
-- Google Cloud project `psyched-myth-504604-f8` with a published OAuth consent screen.
-- An OAuth client whose redirect URIs are
-  `https://mathornament.mathornament.workers.dev/auth/callback` and
-  `http://localhost:8787/auth/callback`.
-- `GOOGLE_CLIENT_ID` in `wrangler.jsonc`, and `GOOGLE_CLIENT_SECRET` stored as a Cloudflare
-  secret (it is *not* in any file in this folder).
-- `.dev.vars` for local testing — it holds the same two values, is ignored by git, and must
-  never be shared or committed.
-
-**Keep the secret safe.** If it ever leaks, go to
-<https://console.cloud.google.com/apis/credentials>, open the OAuth client, click
-**Reset secret**, then run `npx wrangler secret put GOOGLE_CLIENT_SECRET`, paste the new one,
-and `npx wrangler deploy`. Nothing else needs to change.
-
-### Only if you ever start over from a new Google account
+### Setting it up
 
 You need a Google account. Everything below happens once, in Google's website.
 
@@ -147,7 +135,8 @@ You need a Google account. Everything below happens once, in Google's website.
 4. Search for **Credentials** → **Create credentials** → **OAuth client ID**.
    - Application type: **Web application**. Name: `MathOrnament web`.
    - Under **Authorised redirect URIs** click **Add URI** and add both of these, exactly:
-     - `https://mathornament.mathornament.workers.dev/auth/callback`
+     - your live address with `/auth/callback` on the end — the deploy in section 4 printed it,
+       and it looks like `https://mathornament.<your-subdomain>.workers.dev/auth/callback`
      - `http://localhost:8787/auth/callback`
    - **Create**. Google shows a **Client ID** and a **Client secret** — keep the tab open.
 5. Back in a terminal in this folder, put the client ID into `wrangler.jsonc`, in the `vars`

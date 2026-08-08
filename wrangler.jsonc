@@ -1,7 +1,8 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mathornament",
-  "account_id": "e1e1985643cc8491f400c94ffc9f399a",
+  // No account_id: wrangler uses the account you are logged into
+  // (npx wrangler login). Pin one here only if your login has several accounts.
   "main": "src/worker.js",
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -14,7 +15,7 @@
     {
       "binding": "PRESETS",
       // placeholder for local dev; replaced with the real namespace id at deploy time
-      "id": "e4b321a8d73f45fdab049efe5dfb5d8b"
+      "id": "00000000000000000000000000000000"
     }
   ],
   "vars": {
@@ -23,7 +24,7 @@
     //   npx wrangler secret put GOOGLE_CLIENT_SECRET
     // Until both are set, sign-in shows a "not configured yet" page and the
     // rest of the site works normally. See section 5 of GUIDE.md.
-    "GOOGLE_CLIENT_ID": "319756079492-cs5djhva7mn61e3vf679a44jccj5soil.apps.googleusercontent.com"
+    "GOOGLE_CLIENT_ID": ""
   },
   "observability": {
     "enabled": true
