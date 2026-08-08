@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MathOrnament — symmetric reaction-diffusion patterns</title>
+    <meta name="description" content="A gallery of symmetric Gray-Scott reaction-diffusion patterns. Open any pattern live in your browser, tweak the simulation, and publish your own.">
+    <meta property="og:title" content="MathOrnament">
+    <meta property="og:description" content="Live symmetric reaction-diffusion patterns — open one, tweak the simulation, publish your own.">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/apps/symsim/gray_scott/css/icon_gs.svg">
+    <link rel="stylesheet" href="/site.css">
+    <script src="/theme.js"></script>
+    <style>
+        /* Home-page-only styles; everything shared lives in /site.css. */
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 80;
+            padding: 8px 14px;
+            background: var(--panel-2);
+            border: 1px solid var(--border-hi);
+            border-radius: 0 0 8px 0;
+        }
+        .skip-link:focus { left: 0; }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 6px;
+        }
+
+        main.wrap { padding-bottom: 24px; }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ── hero ───────────────────────────────────────────────────────── */
+
+        .hero {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px 32px;
+            padding: 34px 0 4px;
+        }
+
+        .hero-text { max-width: 640px; }
+        .hero h1 { margin: 0; font-size: 32px; letter-spacing: 0.01em; }
+        .hero .tagline { margin: 8px 0 0; font-size: 16px; color: var(--muted); }
+        .hero .credit { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); max-width: 62ch; }
+
+        .hero-cta { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .btn-lg { padding: 11px 20px; font-size: 15px; }
+        .hero-cta-note { margin: 0; font-size: 12px; color: var(--muted); }
+
+        /* ── section header with sort tabs ──────────────────────────────── */
+
+        .sec-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px 18px;
+        }
+
+        .tabs { display: flex; gap: 6px; }
+
+        .tab {
+            padding: 6px 12px;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .tab:hover { background: var(--panel); color: var(--text); text-decoration: none; }
+        .tab.is-active {
+            background: var(--panel-2);
+            border-color: var(--border-hi);
+            color: var(--text);
+        }
+
+        /* ── search results / status rows ───────────────────────────────── */
+
+        .results-bar,
+        .status-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .results-bar { margin: 0 0 14px; }
+        .results-bar strong { color: var(--text); font-weight: 600; }
+        .status-row { margin: 4px 0 0; }
+
+        .btn-quiet { padding: 4px 11px; font-size: 13px; }
+
+        /* ── loading skeletons ──────────────────────────────────────────── */
+
+        .skel {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--panel);
+            aspect-ratio: 4 / 3.55;
+            animation: skel-pulse 1.4s ease-in-out infinite;
+        }
+        .skel:nth-child(even) { animation-delay: 0.25s; }
+
+        @keyframes skel-pulse {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 0.85; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .skel { animation: none; opacity: 0.5; }
+            .card { transition: none; }
+        }
+
+        /* ── narrow screens ─────────────────────────────────────────────── */
+
+        /* The shared nav is one non-wrapping row, which is wider than a phone;
+           let it wrap into two rows so the page never scrolls sideways. */
+        @media (max-width: 720px) {
+            .nav-inner { flex-wrap: wrap; gap: 8px 10px; padding: 8px 16px; }
+            .nav-brand { font-size: 15px; }
+            .nav-link { font-size: 13px; }
+            .nav-user .btn { padding: 5px 9px; font-size: 12px; }
+            .nav-spacer { display: none; }
+            .nav-user { margin-left: auto; }
+            /* Search drops to its own full-width line under the links. */
+            .nav-search { order: 9; flex: 1 1 100%; max-width: none; min-width: 0; }
+        }
+
+        @media (max-width: 640px) {
+            .hero { padding-top: 22px; }
+            .hero h1 { font-size: 26px; }
+            .hero .tagline { font-size: 15px; }
+            .hero-cta { width: 100%; }
+            .hero-cta .btn { width: 100%; justify-content: center; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        }
+
+        /* On the narrowest phones the tile is too small for the second label. */
+        @media (max-width: 420px) {
+            .open-hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header id="nav"></header>
+
+    <main id="main" class="wrap">
+        <section class="hero">
+            <div class="hero-text">
+                <h1>MathOrnament</h1>
+                <p class="tagline">Live symmetric reaction-diffusion patterns — open one, tweak the simulation, publish your own.</p>
+                <p class="credit">Simulation engine: <a href="https://github.com/SymmHub/SymmHub" rel="noopener">SymmHub / symsim</a> by Vladimir Bulatov (MIT). Patterns run in your browser with WebGL2.</p>
+            </div>
+            <div class="hero-cta">
+                <a class="btn btn-primary btn-lg" href="/new">Create a new pattern</a>
+                <p class="hero-cta-note">Opens the editor with a blank canvas.</p>
+            </div>
+        </section>
+
+        <section aria-labelledby="community-heading">
+            <div class="section-head sec-row">
+                <div>
+                    <h2 id="community-heading">Community patterns</h2>
+                    <p class="section-sub">Published by visitors — open one to watch it run, like it, or fork it.</p>
+                </div>
+                <nav class="tabs" id="sort-tabs" aria-label="Sort community patterns"></nav>
+            </div>
+
+            <div id="results-bar" class="results-bar" role="status" aria-live="polite" hidden></div>
+            <div id="community" class="grid"></div>
+            <p id="community-status" class="empty status-row" role="status" hidden></p>
+
+            <noscript>
+                <p class="empty">This gallery needs JavaScript to load patterns. The
+                <a href="/new">editor</a> needs it too — patterns are simulated live in your browser.</p>
+            </noscript>
+        </section>
+
+        <section aria-labelledby="featured-heading">
+            <div class="section-head">
+                <h2 id="featured-heading">Featured presets</h2>
+                <p class="section-sub">Wallpaper-group presets from the SymmHub collection. These are starting points — each one opens straight in the editor.</p>
+            </div>
+
+            <div id="featured" class="grid"></div>
+            <p id="featured-status" class="empty status-row" role="status" hidden></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>Simulation engine: <a href="https://github.com/SymmHub/SymmHub" rel="noopener">SymmHub / symsim</a> by Vladimir Bulatov, MIT license (<a href="/LICENSE-SymmHub.txt">licence notice</a>). Patterns you publish are visible to everyone.</p>
+    </footer>
+
+    <script type="module" src="/gallery.js"></script>
+</body>
+</html>

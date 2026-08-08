@@ -1,0 +1,511 @@
+/**
+ * SymDocumentManager.js
+ *
+ * Manages document loading, saving, and the file/sample selector panels.
+ * Extracted from SymRenderer to keep that module focused on rendering.
+ *
+ * Usage:
+ *   const docManager = createDocumentManager({ appInfo, params, ... });
+ *   docManager.init();           // call once after construction
+ *   docManager.onHashChange();   // call when window hash changes
+ */
+
+import {
+    createImageSelector,
+    createFileSelectionDialog,
+    createSaveAsDialog,
+    createExportImageDialog,
+    BinaryLoader,
+    getHashParams,
+    getFileNameFromPath,
+    showWarningBanner,
+    setParamValues,
+    getDocumentHandler,
+    SymRendererUpgradeData,
+} from './modules.js';
+
+const DEBUG = true;
+const MYNAME = 'DocManager';
+
+const EXT_JSON     = '.json';
+const EXT_JSON_PNG = '.png';
+const EXT_JSON_BIN = '.json.bin';
+
+/**
+ * @param {object} options
+ * @param {object}   options.appInfo            - app metadata object
+ * @param {object}   options.params             - root param tree (never replaced)
+ * @param {object}   [options.rendererConfig]   - SymRendererConfig instance
+ * @param {object}   [options.groupMakerFactory]
+ * @param {string}   [options.docFolderId]
+ * @param {Array}    [options.samples]          - array of imageItems for samples panel
+ *
+ * Callbacks injected from SymRenderer:
+ * @param {function} options.getThumbMaker      - () => thumbMaker object
+ * @param {function} options.setTool            - (toolName: string) => void
+ * @param {function} options.getToolName        - () => string
+ * @param {function} options.setTitle           - (title: string) => void
+ * @param {function} options.getNewDocName      - () => string
+ * @param {function} options.onLoadDocumentText - (text, name) => void
+ */
+export function createDocumentManager(options) {
+
+    const mAppInfo           = options.appInfo;
+    const mParams            = options.params;
+    const mRendererConfig    = options.rendererConfig;
+    const mGroupMakerFactory = options.groupMakerFactory;
+    const mSamplesData       = options.samples;
+    const mDataUpgrader      = options.dataUpgrader || null;
+
+    // Callbacks
+    const getThumbMaker        = options.getThumbMaker;
+    const cbSetTool            = options.setTool;
+    const cbGetToolName        = options.getToolName;
+    const cbSetTitle           = options.setTitle;
+    const cbGetNewDocName      = options.getNewDocName;
+    const cbOnLoadDocumentText = options.onLoadDocumentText;
+
+    // Private state
+    let mDocHandler      = getDocumentHandler({ docFolderId: options.docFolderId });
+    let mCurrentDocument = null;
+    let mFileDialog      = null;   // FileSelectionDialog for local files
+    let mSaveAsDialog    = null;   // SaveAsDialog for Save As / Save New
+    let mExportImageDialog = null; // ExportImageDialog for exporting images
+    let mSamplesSelector = null;   // imageSelector for URL-based samples
+
+    // ── Public API ────────────────────────────────────────────────────────────
+
+    const myself = {
+        init,
+        onHashChange,
+        onSaveDocument,
+        onSaveDocumentAs,
+        onSaveNewDocument,
+        onShowDocuments,
+        onShowSamples,
+        onSelectFolder,
+        onDocumentSelected,
+        openSaveDialog,
+        openExportImageDialog,
+        loadPresetUrl: readParamsUrl,
+        setDocumentData,
+        createInitialDocument,
+        getCurrentDocument: () => mCurrentDocument,
+        getSamplesSelector: () => mSamplesSelector,
+        // ── Batch test helpers ───────────────────────────────────────────────
+        readParamsFromFolder,
+        writeDocumentToFolder,
+    };
+
+    return myself;
+
+    // ── Initialisation ────────────────────────────────────────────────────────
+
+    function init() {
+        window.addEventListener('hashchange', onHashChange);
+        if (mSamplesData) {
+            onShowSamples();
+            mSamplesSelector.addItems(mSamplesData);
+        }
+        try {
+            if (window.localStorage.getItem('docFileDialog_visible') === 'true') {
+                onShowDocuments();
+            }
+        } catch (e) {
+            console.warn('localStorage error in SymDocumentManager init:', e);
+        }
+    }
+
+    function createInitialDocument() {
+        mCurrentDocument = mDocHandler.createDocument({
+            appInfo:        mAppInfo,
+            params:         mParams,
+            thumbMaker:     getThumbMaker(),
+            rendererConfig: mRendererConfig,
+        });
+        return mCurrentDocument;
+    }
+
+    // ── Hash navigation ───────────────────────────────────────────────────────
+
+    function onHashChange() {
+        let opt = getHashParams();
+        if(DEBUG)console.log(`${MYNAME}.onHashChange()`, opt);
+        if(opt.preset) readParamsUrl(opt.preset);
+    }
+
+    // ── Loading ───────────────────────────────────────────────────────────────
+
+    async function setDocumentData(jsonObj, binBuffer = null, baseUrl = null) {
+
+        if(false)console.log(`${MYNAME}.setDocumentData()`, JSON.stringify(jsonObj, null, 2));
+        SymRendererUpgradeData(jsonObj, { groupMakerFactory: mGroupMakerFactory });
+        // App-specific upgrader (e.g. GL format migration) runs after the general upgrade.
+        mDataUpgrader?.upgrade(jsonObj);
+
+        if (jsonObj.binary_data) {
+            let buf = binBuffer;
+            if (!buf) {
+                try {
+                    const absBase = baseUrl
+                        ? new URL(baseUrl, window.location.href).href
+                        : window.location.href;
+                    const binUrl = new URL(jsonObj.binary_data.file, absBase).href;
+                    if(DEBUG) console.log(`${MYNAME}: fetching bin sidecar: ${binUrl}`);
+                    const resp = await fetch(binUrl);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+                    buf = await resp.arrayBuffer();
+                } catch(e) {
+                    console.warn(`${MYNAME}: could not load binary sidecar`, e);
+                }
+            }
+            if (buf) {
+                const { manifest, binData } = BinaryLoader.parseFileBuffer(buf);
+                mCurrentDocument.beginLoad(new BinaryLoader(manifest, binData));
+            }
+        }
+
+        setParamValues(mParams, jsonObj.params, true);
+        mCurrentDocument.endLoad();
+
+        cbSetTitle(mCurrentDocument.getName());
+        cbSetTool(cbGetToolName());
+    }
+
+    async function readParamsUrl(jsonUrl) {
+        if(DEBUG)console.log(`${MYNAME}.readParamsUrl()`, jsonUrl);
+        let docName = getFileNameFromPath(jsonUrl);
+        mCurrentDocument = mDocHandler.createDocument({
+            appInfo:        mAppInfo,
+            params:         mParams,
+            thumbMaker:     getThumbMaker(),
+            name:           docName,
+            rendererConfig: mRendererConfig,
+            // No origin — URL-based docs are "samples", Save will open SaveAs
+        });
+        const response = await fetch(jsonUrl);
+        const json = await response.json();
+        await setDocumentData(json, null, jsonUrl);
+    }
+
+    async function readParamsFile(jsonFile, binFile = null) {
+        if(DEBUG)console.log(`${MYNAME}.readParamsFile():`, jsonFile, 'bin:', binFile);
+        const jsonText = await jsonFile.text();
+        let jsonObj;
+        try {
+            jsonObj = JSON.parse(jsonText);
+        } catch(e) {
+            console.error(`${MYNAME}.readParamsFile(): JSON parse error`, e);
+            return;
+        }
+
+        let binBuffer = null;
+        if (jsonObj.binary_data) {
+            if (binFile) {
+                binBuffer = await binFile.arrayBuffer();
+                if (binBuffer.byteLength === 0) {
+                    console.warn(`${MYNAME}.readParamsFile(): binary sidecar is empty`);
+                    binBuffer = null;
+                }
+            } else {
+                try {
+                    const resp = await fetch(jsonObj.binary_data.file);
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+                    binBuffer = await resp.arrayBuffer();
+                } catch(e) {
+                    console.warn(`${MYNAME}.readParamsFile(): could not load binary sidecar`, e);
+                }
+            }
+
+            if (!binBuffer) {
+                const binName = jsonObj.binary_data.file ?? '<unknown>.bin';
+                const msg = `Cannot load "${jsonObj.name ?? jsonFile.name}":\n`
+                          + `Binary data file "${binName}" is missing or could not be loaded.\n`
+                          + `Select both the .json and the matching .bin file together.`;
+                console.error(`${MYNAME}:`, msg);
+                showWarningBanner(msg, 20000);
+                return;
+            }
+        }
+
+        if(jsonObj.name && mCurrentDocument.setName) mCurrentDocument.setName(jsonObj.name);
+        cbSetTitle(jsonObj.name || jsonFile.name);
+
+        await setDocumentData(jsonObj, binBuffer);
+    }
+
+    /**
+     * Load a document from a pair of FileSystemFileHandles.
+     * Called when the user clicks a JSON file in the FileSelectionDialog.
+     */
+    async function readParamsHandle(jsonHandle, binHandle) {
+        if(DEBUG)console.log(`${MYNAME}.readParamsHandle()`, jsonHandle.name);
+        const jsonFile = await jsonHandle.getFile();
+        const binFile  = binHandle ? await binHandle.getFile() : null;
+        const baseName = jsonHandle.name.replace(/\.json$/, '');
+
+        mCurrentDocument = mDocHandler.createDocument({
+            appInfo:              mAppInfo,
+            params:               mParams,
+            thumbMaker:           getThumbMaker(),
+            name:                 baseName,
+            rendererConfig:       mRendererConfig,
+            originFolderHandle:   mFileDialog?.getWriteHandle() ?? null,
+            originFileName:       baseName,
+        });
+        await readParamsFile(jsonFile, binFile);
+    }
+
+    /**
+     * Binary-aware load from a folder for the batch test runner.
+     * Reads the .json and (if present) the matching .json.bin sidecar,
+     * then loads the document exactly like the normal FileSelectionDialog flow.
+     *
+     * @param {FileSystemDirectoryHandle} srcFolder
+     * @param {string}                   fileName   e.g. "foo.json"
+     */
+    async function readParamsFromFolder(srcFolder, fileName) {
+        if(DEBUG) console.log(`${MYNAME}.readParamsFromFolder()`, fileName);
+        const jsonHandle = await srcFolder.getFileHandle(fileName);
+        let binHandle = null;
+        try { binHandle = await srcFolder.getFileHandle(fileName + '.bin'); } catch (_) {}
+        await readParamsHandle(jsonHandle, binHandle);
+    }
+
+    /**
+     * Binary-aware params-only write for the batch test runner.
+     * Writes JSON (and, if needed, the .json.bin sidecar) to outFolder.
+     * Does NOT write a thumbnail — the caller (TestWriter) handles that.
+     *
+     * @param {FileSystemDirectoryHandle} outFolder
+     * @param {string}                   baseName  filename without .json
+     */
+    async function writeDocumentToFolder(outFolder, baseName) {
+        return mCurrentDocument.writeParamsTo(outFolder, baseName);
+    }
+
+    // ── Document selection ────────────────────────────────────────────────────
+
+    function onDocumentSelected(itemData) {
+        if(DEBUG)console.log(`${MYNAME}.onDocumentSelected():`, itemData);
+
+        if (itemData.isSample) {
+            // URL-based sample — update hash so URL reflects active preset
+            const currentPreset = getHashParams().preset;
+            if (currentPreset === itemData.jsonUrl) {
+                onHashChange();
+            } else {
+                window.location.hash = JSON.stringify({ preset: itemData.jsonUrl });
+            }
+        } else if (itemData.jsonFile) {
+            // Fallback: drag-and-drop (kept for backward compatibility)
+            mCurrentDocument = mDocHandler.createDocument({
+                appInfo:        mAppInfo,
+                jsonFile:       itemData.jsonFile,
+                params:         mParams,
+                thumbMaker:     getThumbMaker(),
+                rendererConfig: mRendererConfig,
+            });
+            const jsonFile = mCurrentDocument.getJsonFile();
+            if (jsonFile) readParamsFile(jsonFile, itemData.binFile);
+        }
+    }
+
+    // ── Saving ────────────────────────────────────────────────────────────────
+
+    /**
+     * Save the current document.
+     * - If it was loaded from a local file (has origin), overwrite in-place.
+     * - If it came from a URL/sample, open the Save As dialog.
+     */
+    function onSaveDocument() {
+        const doc          = mCurrentDocument;
+        const originFolder = doc.getOriginFolderHandle?.();
+        const originName   = doc.getOriginFileName?.();
+
+        if (originFolder && originName) {
+            // Local file — overwrite directly
+            if(DEBUG)console.log(`${MYNAME}.onSaveDocument(): overwriting`, originName);
+            mDocHandler.setWriteFolder(originFolder);
+            doc.save().then(() => {
+                mFileDialog?.reload(originName, originFolder);
+            });
+        } else {
+            // Sample or unsaved — redirect to Save As
+            if(DEBUG)console.log(`${MYNAME}.onSaveDocument(): no origin, opening Save As`);
+            onSaveDocumentAs();
+        }
+    }
+
+    /** Open Save As dialog with the current document name pre-filled. */
+    function onSaveDocumentAs() {
+        openSaveAsDialog(mCurrentDocument.getName());
+    }
+
+    /** Open Save As dialog with an auto-generated name pre-filled. */
+    function onSaveNewDocument() {
+        openSaveAsDialog(cbGetNewDocName());
+    }
+
+    function openSaveAsDialog(suggestedName) {
+        if (!mSaveAsDialog) {
+            mSaveAsDialog = createSaveAsDialog({ storageId: 'saveAsDialog' });
+        }
+        mSaveAsDialog.show({
+            suggestedName,
+            suggestedHandle: mFileDialog?.getWriteHandle()     ?? null,
+            suggestedPath:   mFileDialog?.getWriteHandlePath() ?? null,
+            rootHandle:      mFileDialog?.getRootHandle()      ?? null,
+            onSave: (name, folderHandle) => {
+                mDocHandler.setWriteFolder(folderHandle);
+                saveDocAs(name, folderHandle);
+            },
+        });
+    }
+
+    function saveDocAs(newName, folderHandle) {
+        if(DEBUG)console.log(`${MYNAME}.saveDocAs()`, newName);
+        let newDoc = mCurrentDocument.clone();
+        newDoc.setName(newName);
+        // Update origin so subsequent Save overwrites directly
+        newDoc.setOrigin(folderHandle, newName);
+
+        newDoc.save().then(() => {
+            mCurrentDocument = newDoc;
+            mFileDialog?.reload(newName, folderHandle);
+        });
+    }
+
+    // ── Panel management ──────────────────────────────────────────────────────
+
+    /**
+     * Create mFileDialog if it doesn't exist yet (shared by onShowDocuments and openSaveDialog).
+     */
+    function ensureFileDialog() {
+        if (!mFileDialog) {
+            mFileDialog = createFileSelectionDialog({
+                title:          'Documents',
+                filter:         'json',
+                storageId:      'docFileDialog',
+                width:          '520px',
+                height:         '460px',
+                left:           '60px',
+                top:            '60px',
+                onSelect:       (item) => readParamsHandle(item.jsonHandle, item.binHandle),
+                onFolderChange: (handle) => mDocHandler.setWriteFolder(handle),
+            });
+        }
+        return mFileDialog;
+    }
+
+    /**
+     * Show the file browser dialog.
+     * On first call: creates the dialog (lazily). Subsequent calls just show it.
+     */
+    function onShowDocuments() {
+        if(DEBUG)console.log(`${MYNAME}.onShowDocuments()`);
+        ensureFileDialog().show();
+    }
+
+    /** Show/create the samples panel (URL-based presets). */
+    function onShowSamples() {
+        if(DEBUG)console.log(`${MYNAME}.onShowSamples()`);
+        if (!mSamplesSelector) {
+            mSamplesSelector = createImageSelector({
+                width:     '600px',
+                height:    '160px',
+                left:      '1px',
+                top:       '500px',
+                title:     'samples',
+                onSelect:  onDocumentSelected,
+                storageId: 'samples',
+            });
+        } else {
+            mSamplesSelector.setVisible(true);
+        }
+    }
+
+    /** Re-select the root folder for the file browser. */
+    function onSelectFolder() {
+        if(DEBUG)console.log(`${MYNAME}.onSelectFolder()`);
+        if (!mFileDialog) {
+            // Lazily create and let show() handle folder selection
+            onShowDocuments();
+        } else {
+            mFileDialog.selectFolder();
+        }
+    }
+
+    /**
+     * Open SaveAsDialog for an arbitrary save operation (e.g. saving an image).
+     * Pre-fills folder/path from FileSelectionDialog's current context, loading
+     * from IDB if the dialog has not been opened yet this session.
+     * @param {object}   opts
+     * @param {string}   [opts.suggestedName]  pre-filled filename (no extension)
+     * @param {function} [opts.onSave]         (name: string, folderHandle: FileSystemDirectoryHandle) => void
+     * @param {function} [opts.onCancel]       () => void
+     */
+    async function openSaveDialog({ suggestedName = '', onSave, onCancel } = {}) {
+        if(DEBUG)console.log(`${MYNAME}.openSaveDialog()`, suggestedName);
+        if (!mSaveAsDialog) {
+            mSaveAsDialog = createSaveAsDialog({ storageId: 'saveAsDialog' });
+        }
+        // Ensure mFileDialog exists and its root is loaded from IDB.
+        // This guarantees rootHandle is always set correctly even when Files…
+        // has never been opened in this session.
+        const existed = !!mFileDialog;
+        const fd = ensureFileDialog();
+        if (!existed) {
+            // createFileSelectionDialog → createInternalWindow may auto-restore the
+            // dialog as visible (from IDB) if it was left open last session.
+            // Hide it immediately so it doesn't appear as an empty popup here.
+            fd.setVisible(false);
+        }
+        await fd.loadRootHandle();
+
+        mSaveAsDialog.show({
+            suggestedName,
+            suggestedHandle: fd.getWriteHandle()     ?? null,
+            suggestedPath:   fd.getWriteHandlePath() ?? null,
+            rootHandle:      fd.getRootHandle()      ?? null,
+            onSave,
+            onCancel,
+        });
+    }
+
+    /**
+     * Open ExportImageDialog for exporting a canvas image.
+     * Pre-fills folder/path from FileSelectionDialog's current context, loading
+     * from IDB if the dialog has not been opened yet this session.
+     * @param {object}   opts
+     * @param {string}   [opts.suggestedName]    pre-filled filename (no extension)
+     * @param {number}   [opts.suggestedWidth]   pre-filled width
+     * @param {number}   [opts.suggestedHeight]  pre-filled height
+     * @param {function} [opts.onSave]           (name: string, folderHandle: FileSystemDirectoryHandle, width: number, height: number) => void
+     * @param {function} [opts.onCancel]         () => void
+     */
+    async function openExportImageDialog({ suggestedName = '', suggestedWidth = 800, suggestedHeight = 600, onSave, onCancel } = {}) {
+        if(DEBUG)console.log(`${MYNAME}.openExportImageDialog()`, suggestedName);
+        if (!mExportImageDialog) {
+            mExportImageDialog = createExportImageDialog({ storageId: 'exportImageDialog' });
+        }
+        const existed = !!mFileDialog;
+        const fd = ensureFileDialog();
+        if (!existed) {
+            fd.setVisible(false);
+        }
+        await fd.loadRootHandle();
+
+        mExportImageDialog.show({
+            suggestedName,
+            suggestedWidth,
+            suggestedHeight,
+            suggestedHandle: fd.getWriteHandle()     ?? null,
+            suggestedPath:   fd.getWriteHandlePath() ?? null,
+            rootHandle:      fd.getRootHandle()      ?? null,
+            onSave,
+            onCancel,
+        });
+    }
+
+} // createDocumentManager

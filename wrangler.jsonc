@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mathornament",
+  "account_id": "e1e1985643cc8491f400c94ffc9f399a",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/s/*", "/auth/*", "/view/*", "/user/*", "/new"]
+  },
+  "kv_namespaces": [
+    {
+      "binding": "PRESETS",
+      // placeholder for local dev; replaced with the real namespace id at deploy time
+      "id": "e4b321a8d73f45fdab049efe5dfb5d8b"
+    }
+  ],
+  "vars": {
+    // Google OAuth client ID (safe to commit). Paste the ID from the Google
+    // Cloud console here; the matching secret goes in with
+    //   npx wrangler secret put GOOGLE_CLIENT_SECRET
+    // Until both are set, sign-in shows a "not configured yet" page and the
+    // rest of the site works normally. See section 5 of GUIDE.md.
+    "GOOGLE_CLIENT_ID": "319756079492-cs5djhva7mn61e3vf679a44jccj5soil.apps.googleusercontent.com"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>MathOrnament — pattern viewer</title>
+        <link rel="stylesheet" href="./css/main.css"/>
+    <script src="/theme.js"></script>
+        <style>
+            /* Read-only viewer. Deliberately NOT height:100% — the app sizes its
+               own GL canvas at startup, and forcing the container to the frame
+               height stretches the canvas away from its backing store, which
+               renders as a flat colour. Let it lay out naturally and crop. */
+            :root {
+                color-scheme: light dark;
+
+                --vl-bg: #f6f7fa;
+                --vl-btn: rgba(255, 255, 255, 0.94);
+                --vl-btn-solid: #ffffff;
+                --vl-border: #dce1ea;
+                --vl-fg: #131a26;
+                --vl-focus: #1552c9;
+                --vl-shadow: 0 4px 14px rgba(19, 26, 38, 0.18);
+
+                --vd-bg: #0b0e14;
+                --vd-btn: rgba(16, 22, 35, 0.92);
+                --vd-btn-solid: #16202f;
+                --vd-border: #2a3852;
+                --vd-fg: #dbe4f5;
+                --vd-focus: #7fb4ff;
+                --vd-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+
+                --v-bg: var(--vl-bg);
+                --v-btn: var(--vl-btn);
+                --v-btn-solid: var(--vl-btn-solid);
+                --v-border: var(--vl-border);
+                --v-fg: var(--vl-fg);
+                --v-focus: var(--vl-focus);
+                --v-shadow: var(--vl-shadow);
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) {
+                    color-scheme: dark;
+                    --v-bg: var(--vd-bg);
+                    --v-btn: var(--vd-btn);
+                    --v-btn-solid: var(--vd-btn-solid);
+                    --v-border: var(--vd-border);
+                    --v-fg: var(--vd-fg);
+                    --v-focus: var(--vd-focus);
+                    --v-shadow: var(--vd-shadow);
+                }
+            }
+
+            :root[data-theme="dark"] {
+                color-scheme: dark;
+                --v-bg: var(--vd-bg);
+                --v-btn: var(--vd-btn);
+                --v-btn-solid: var(--vd-btn-solid);
+                --v-border: var(--vd-border);
+                --v-fg: var(--vd-fg);
+                --v-focus: var(--vd-focus);
+                --v-shadow: var(--vd-shadow);
+            }
+
+            :root[data-theme="light"] {
+                color-scheme: light;
+                --v-bg: var(--vl-bg);
+                --v-btn: var(--vl-btn);
+                --v-btn-solid: var(--vl-btn-solid);
+                --v-border: var(--vl-border);
+                --v-fg: var(--vl-fg);
+                --v-focus: var(--vl-focus);
+                --v-shadow: var(--vl-shadow);
+            }
+
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background: var(--v-bg);
+            }
+            #canvasContainer { background: var(--v-bg); }
+
+            /* Single play/pause control, in place of symsim's whole toolbox
+               (see mo_embed.js). Sits in the corner like a video player. */
+            .mo-play {
+                position: fixed;
+                left: 12px;
+                bottom: 12px;
+                z-index: 10;
+                width: 44px;
+                height: 44px;
+                display: grid;
+                place-items: center;
+                padding: 0;
+                border: 1px solid var(--v-border);
+                border-radius: 50%;
+                background: var(--v-btn);
+                color: var(--v-fg);
+                cursor: pointer;
+                box-shadow: var(--v-shadow);
+                backdrop-filter: blur(6px);
+                transition: background 0.12s ease, transform 0.12s ease;
+            }
+            .mo-play:hover { background: var(--v-btn-solid); transform: scale(1.05); }
+            .mo-play:focus-visible { outline: 2px solid var(--v-focus); outline-offset: 2px; }
+            .mo-play svg { width: 22px; height: 22px; display: block; }
+            /* Recede once it is running, so it does not compete with the art. */
+            .mo-play.is-playing { opacity: 0.55; }
+            .mo-play.is-playing:hover { opacity: 1; }
+        </style>
+    </head>
+    <body>
+
+    <script type="module" src="js/mo_embed.js">
+    </script>
+    </body>
+</html>

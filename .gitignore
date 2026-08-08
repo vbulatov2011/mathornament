@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+.dev.vars
+.DS_Store
+
+# stray curl cookie jars from local API testing
+jar.txt
+cookies*.txt

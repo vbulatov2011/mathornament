@@ -1,0 +1,306 @@
+import {    
+    Colormaps,    
+    ParamBool,
+    ParamFloat,
+    ParamInt,
+    ParamObj,
+    ParamChoice, 
+    ParamGroup,
+    ParamString,
+    TextureFile,
+    Textures,
+    setViewport,
+    enableBlending,
+    SymRendererPrograms,
+    TORADIANS,
+    createFBO,
+    getStandardTexTransUni,
+} from './modules.js';
+
+const DEBUG = false;
+const MYNAME = 'VisualizationTexmap';
+const INCREMENT = 1.e-12;
+
+function VisualizationTexmap(par={}){
+    
+    const mTextureMaker = new TextureFile({
+        texInfo:   Textures.t1.concat(Textures.t2).concat(Textures.experimental),
+        onChanged: onChange,
+    });
+        
+    let mConfig = {
+        enabled: true,
+        opacity: 1,  
+        texture: mTextureMaker,
+        minValue: -1,
+        maxValue:  1,
+        useMipmap: false,
+        
+        transform: {
+            scale: 1,
+            angle: 0,
+            texCenterX: 0,
+            texCenterY: 0,
+            uvOriginX: 0,
+            uvOriginY: 0,
+        }
+    };
+    if(par.config){
+        Object.assign(mConfig, par.config);
+    }
+
+    const mIdRef = { id: par.id ?? '' };  // editable layer name/id
+    let mOnIdChange = null;
+
+    let mParams = null;
+    let mGLCtx = null;
+    let mOnChange = null;
+    let mPrograms = null;
+    let mMipmapBuffer = null;   // RGBA8 FBO for off-screen texmap + mipmap generation
+    const MIPMAP_SIZE = 512;    // must be power-of-2
+    
+    function onChange(param){
+        
+      if(DEBUG)console.log(`${MYNAME}.onChange()`, param);
+      if(mOnChange) mOnChange(param);
+        
+    }
+
+    function makeParams(tmc) {
+
+        let oc = onChange;
+
+        return {
+            id:         ParamString({ obj: mIdRef, key: 'id', name: 'id', onChange: () => { if (mOnIdChange) mOnIdChange(); } }),
+            enabled:    ParamBool({obj: tmc, key: 'enabled', onChange: oc}),
+            opacity:    ParamFloat({obj: tmc, key: 'opacity',onChange: oc}),
+            minValue:   ParamFloat({obj: tmc, key:'minValue', onChange: oc}),
+            maxValue:   ParamFloat({obj: tmc, key:'maxValue', onChange: oc}),
+            useMipmap:  ParamBool({obj: tmc, key: 'useMipmap',onChange: oc}),
+            texture:    ParamObj({name: 'texture', obj: mTextureMaker }),
+            transform:  makeTexTransformParams(tmc.transform),
+        };
+
+    } // function makeParams()
+    
+    function makeTexTransformParams(ttcfg){
+        let tt = ttcfg;
+        let oc = onChange;        
+        return ParamGroup({name: 'transform',
+                          params: {
+                                scale: ParamFloat({obj: tt, key: 'scale', min: -10, max: 10, step: 0.00001, onChange: oc}),
+                                angle: ParamFloat({obj: tt, key: 'angle', min: -360,max: 360,step: 0.00001, onChange: oc}),
+                                texCenterX: ParamFloat({obj: tt,key: 'texCenterX', min: -1, max: 1,step: 0.00001,onChange: oc}),
+                                texCenterY: ParamFloat({obj: tt,key: 'texCenterY', min: -1, max: 1,step: 0.00001,onChange: oc}),
+                                uvOriginX: ParamFloat({obj: tt, key: 'uvOriginX', min: -1, max: 1, step: 0.00001,onChange: oc}),
+                                uvOriginY: ParamFloat({obj: tt, key: 'uvOriginY', min: -1, max: 1,step: 0.00001, onChange: oc}),
+                            }
+        });        
+    }
+
+    //
+    //
+    // 
+    function render(par){
+        
+        let cfg = mConfig;
+        if(!cfg.enabled)
+            return;
+        //if(DEBUG) console.log(`${MYNAME}.render()`, par);
+        let gl = mGLCtx.gl;
+        
+        let dataBuffer  = par.dataBuffer; 
+        let renderUni   = par.renderUni;
+        let navigatorUni = par.navigatorUni;
+        let canvas      = par.canvas;
+        let renderTarget = null;
+
+        let tvc = cfg.transform;
+        let uvAngle = TORADIANS * tvc.angle;
+        let uvScale = tvc.scale;
+        
+        // texmap uniforms 
+        let texUni = { 
+           
+            uMinValue:      cfg.minValue,
+            uMaxValue:      cfg.maxValue,
+            uColorTexture:  mTextureMaker.getTexture(),
+            uUVscale:       [uvScale * Math.cos(uvAngle), -uvScale * Math.sin(uvAngle)],
+            uUVorigin:      [tvc.uvOriginX, tvc.uvOriginY],
+            uTexCenter:     [tvc.texCenterX, tvc.texCenterY],
+            uTransparency:      1.-cfg.opacity,            
+        };
+        if(cfg.useMipmap && mMipmapBuffer){
+            // ── Offscreen pass: render textured data into the mipmap FBO ──
+            let progVis = mPrograms.getProgram('bufferVisTextured');
+            progVis.bind();
+
+            let cnv = mMipmapBuffer;
+            // Render into the full mipmap FBO (no blending — whole viewport is overwritten)
+            gl.viewport(0, 0, cnv.width, cnv.height);
+            gl.disable(gl.BLEND);
+
+            // Standard UV transform so the whole buffer maps to [0,1]^2
+            let transUni = getStandardTexTransUni(cnv);
+
+            // bufferVisTextured needs uSimBuffer (data) plus the same texmap uniforms
+            let visTexUni = {
+                uSimBuffer:     dataBuffer.read,
+                uColorTexture:  texUni.uColorTexture,
+                uUVscale:       texUni.uUVscale,
+                uUVorigin:      texUni.uUVorigin,
+                uTexCenter:     texUni.uTexCenter,
+            };
+
+            progVis.setUniforms(transUni);
+            progVis.setUniforms(visTexUni);
+            progVis.blit(mMipmapBuffer);      // render to mip level 0
+            mMipmapBuffer.attach(0);          // bind texture to unit 0 (required before generateMipmap)
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
+        //
+        // render the complete image 
+        // 
+        enableBlending(gl);
+        
+        setViewport(gl, canvas);
+        let renderProg = mPrograms.getProgram('bufferToScreenTextured');
+
+        renderProg.bind();
+
+        renderProg.setUniforms(navigatorUni);
+        renderProg.setUniforms(renderUni);
+        renderProg.setUniforms(texUni);
+        
+        // Pass mipmap uniforms: uUseMipmap toggles mipmap path in shader,
+        // uMipmapData provides the pre-rendered + mip-chain texture.
+        renderProg.setUniforms({
+            uUseMipmap:  cfg.useMipmap && !!mMipmapBuffer,
+            uMipmapData: mMipmapBuffer ? mMipmapBuffer.texture : null,
+        });
+        
+        renderProg.blit(renderTarget);
+       
+    }
+    /*
+    {
+        let gl = mGLCtx.gl;
+
+        let visConf     = mConfig.visualization;
+        let symOptions  = mConfig.symmetry.options;
+        let visOpt      = mConfig.visualization.options;       
+
+        let simBuffer   = mSimulation.getSimBuffer();
+        let tvc = mConfig.texTransform;
+        let uvAngle = TORADIANS * tvc.angle;
+        let uvScale = tvc.scale;
+        
+        // texture visualization  uniforms 
+        let texVisUni = { 
+           
+            uMinValue:      visConf.minValue,
+            uMaxValue:      visConf.maxValue,
+            uColorTexture:  mTextureMaker.getTexture(),
+            uUVscale:       [uvScale * Math.cos(uvAngle), -uvScale * Math.sin(uvAngle)],
+            uUVorigin:      [tvc.uvOriginX, tvc.uvOriginY],
+            uTexCenter:     [tvc.texCenterX, tvc.texCenterY],
+
+        };
+
+        if(visOpt.useMipmap){ // create mipmap 
+        
+            let progVis = mPrograms.getProgram('bufferVisTextured');
+            progVis.bind();
+
+            let cnv = mMipmapBuffer;
+            gl.viewport(0, 0, cnv.width, cnv.height);
+            // no need to clear because we render the whole viewport and have no blending
+            disableBlending();
+                    
+            // transformation to render data into buffer 
+            let transUni = getStandardTexTransUni(cnv);
+            
+            progVis.setUniforms(transUni);            
+            progVis.setUniforms(texVisUni);            
+            progVis.blit(mMipmapBuffer);      // render to top mipmap level 
+            
+            mMipmapBuffer.attach(0);          // set as the current texture. Needed for  generateMipmap()            
+            gl.generateMipmap(gl.TEXTURE_2D); 
+            
+        }
+        
+        //
+        // render the complete image 
+        // 
+        enableBlending();
+        
+        let renderProg = mPrograms.getProgram('bufferToScreenTextured');
+        renderProg.bind();
+
+
+        // uniforms for complete canvas transform 
+        let ctUni = mNavigator.getUniforms({}, mTimeStamp);            
+        renderProg.setUniforms(ctUni);
+        
+        let renderUni = getRenderUni();            
+        renderProg.setUniforms(renderUni);
+        
+        // reuse textured visualization uniforms 
+        renderProg.setUniforms(texVisUni);
+        
+        let mipmapUni = getMipmapUni();            
+        renderProg.setUniforms(mipmapUni);
+
+        let canvas = mCanvas.glCanvas;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        renderProg.blit(null); 
+    }
+    */
+    function init(par){
+        
+       if(DEBUG) console.log(`${MYNAME}.init()`, par);
+        mGLCtx = par.glCtx;        
+        mOnChange = par.onChange;        
+        mPrograms = SymRendererPrograms();
+        mTextureMaker.init(mGLCtx);
+
+        // Create the off-screen RGBA8 mipmap FBO.
+        // Must be RGBA8 / UNSIGNED_BYTE (not float) for generateMipmap() to work in WebGL2,
+        // and size must be a power-of-two so the full mip chain is generated.
+        const gl = mGLCtx.gl;
+        mMipmapBuffer = createFBO(
+            gl, MIPMAP_SIZE, MIPMAP_SIZE,
+            gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE,
+            gl.LINEAR_MIPMAP_LINEAR
+        );
+        if(DEBUG) console.log(`${MYNAME}.init() mMipmapBuffer created`, mMipmapBuffer);
+        
+    }
+    
+    //
+    //
+    //
+    function getParams(){
+        if(!mParams)
+            mParams = makeParams(mConfig);
+        return mParams;
+        
+    }
+    
+    return {
+        getParams:    getParams, 
+        getClassName: (() => MYNAME),
+        getId:        ()    => mIdRef.id,
+        setId:        (id)  => { mIdRef.id = id; },
+        setOnIdChange:(fn)  => { mOnIdChange = fn; },
+        init:         init,
+        render:       render,
+        get enabled(){return mConfig.enabled;},
+    }
+
+} // function VisualizationTexmap
+
+
+export {
+   VisualizationTexmap     
+}

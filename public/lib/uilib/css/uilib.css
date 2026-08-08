@@ -1,0 +1,444 @@
+@import url('dat-gui-mod.css');
+/*@import url('../../datgui/css/datgui.css');*/
+@import url('tree.css');
+@import url('thumbnails.css');
+@import url('folder-picker.css');
+
+:root {
+    --drag-header-size: 17px;
+}
+
+.drag-style  {
+    position: absolute;
+    overflow-x: auto;
+    border:  1px solid #aaa;
+    border-radius: 6px;
+    background-color: #500;
+    box-shadow: 0 5px 10px #1113;
+
+    
+}
+
+.hide-overflow  {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+
+.interior-style  {
+
+  position: absolute;
+  height: calc(100% - var(--drag-header-size));
+  width: 100%;
+  top: var(--drag-header-size);
+  cursor: crosshair;
+  background-color: #eee;
+  overflow: auto;
+
+}
+
+.header-style  {
+    
+    position : absolute;
+    top : 0px;
+    height : var(--drag-header-size);
+    width : 100%;
+    cursor: move;
+    background-color: #BBB;
+}
+
+.header-style:hover  {
+    
+    background-color: #0078d4;
+}
+
+.close-button-style {
+  
+  position: absolute;
+  top:    0px;
+  right:   0px;
+  height: var(--drag-header-size);
+  width:  var(--drag-header-size);
+  cursor:  default;  
+  background-color: #FFF0;
+  background-image: url('images/btn_close.svg');
+  background-size:  var(--drag-header-size);
+}
+
+.close-button-style:hover {
+  background-color: #c42b1c;
+}
+
+/* Remove DatGUI panel outer border, shadow, and rounded corners when hosted inside internalWindow */
+.interior-style #rightGUI,
+.interior-style #configGUI,
+.interior-style .dg.main,
+.interior-style .dg {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+/* InternalWindow DatGUI container & panel classes */
+.gui-window-interior {
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--background-color, #f9f9f9);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.gui-window-panel {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+}
+
+.vbar-separator {
+    width: 20px;
+}
+
+/* Colormap Editor Styles */
+.colormap-editor-interior {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: Verdana, sans-serif;
+    font-size: 12px;
+    color: #333;
+    background-color: #f5f5f5;
+    height: calc(100% - var(--drag-header-size));
+    width: 100%;
+}
+
+.colormap-editor-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.colormap-editor-flex-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.colormap-editor-label-bold {
+    font-weight: bold;
+}
+
+.colormap-editor-select {
+    padding: 2px 4px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.colormap-editor-preview-wrapper {
+    position: relative;
+    width: 100%;
+    height: 78px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #999;
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+}
+
+.colormap-editor-preview-canvas {
+    width: 100%;
+    flex: 1;
+    display: block;
+    cursor: pointer;
+}
+
+.colormap-editor-ruler-canvas {
+    width: 100%;
+    height: 30px;
+    flex-shrink: 0;
+    display: block;
+    border-top: 1px solid #aaa;
+}
+
+.colormap-editor-track-container {
+    position: relative;
+    width: 100%;
+    height: 40px;
+    margin: 4px 0 12px 0;
+    user-select: none;
+}
+
+.colormap-editor-track-line {
+    position: absolute;
+    top: 18px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #888;
+}
+
+.colormap-editor-detail-box {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.colormap-editor-row-space-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.colormap-editor-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    align-items: center;
+}
+
+.colormap-editor-col-header {
+    font-weight: bold;
+    font-size: 12px;
+    color: #333;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+}
+
+.colormap-editor-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.colormap-editor-colors-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background-color: transparent;
+    padding: 4px 0;
+    border: none;
+    margin-top: 4px;
+}
+
+.colormap-editor-color-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.colormap-editor-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    color: #1e293b;
+    margin: 0;
+    align-self: center;
+}
+
+.colormap-editor-link-btn svg {
+    stroke: #1e293b;
+}
+
+.colormap-editor-link-btn:hover {
+    background-color: #e2e8f0;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.colormap-editor-link-btn:hover svg {
+    stroke: #0f172a;
+}
+
+.colormap-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    color: #1e293b;
+}
+
+.colormap-icon-btn svg {
+    stroke: #1e293b;
+}
+
+.colormap-icon-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.colormap-icon-btn:hover svg {
+    stroke: #0f172a;
+}
+
+.colormap-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+.colormap-icon-btn:disabled svg {
+    stroke: #94a3b8;
+}
+
+.colormap-editor-link-btn.pressed,
+.colormap-editor-link-btn.active,
+.colormap-icon-btn.pressed,
+.colormap-icon-btn.active {
+    background-color: #bae6fd;
+    border-color: #0284c7;
+    color: #1e293b;
+    box-shadow: inset 0 1.5px 3px rgba(0, 0, 0, 0.25);
+    transform: translateY(1px);
+}
+
+.colormap-editor-link-btn.pressed svg,
+.colormap-editor-link-btn.active svg,
+.colormap-icon-btn.pressed svg,
+.colormap-icon-btn.active svg {
+    stroke: #222222;
+}
+
+.colormap-icon-btn.pressed:hover,
+.colormap-icon-btn.active:hover,
+.colormap-editor-link-btn.pressed:hover,
+.colormap-editor-link-btn.active:hover {
+    background-color: #7dd3fc;
+    border-color: #0284c7;
+    color: #0f172a;
+}
+
+.colormap-icon-btn.pressed:hover svg,
+.colormap-icon-btn.active:hover svg,
+.colormap-editor-link-btn.pressed:hover svg,
+.colormap-editor-link-btn.active:hover svg {
+    stroke: #222222;
+}
+
+.colormap-editor-btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    background-color: transparent;
+    border: none;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.colormap-editor-btn {
+    flex: 1;
+    min-width: 60px;
+    padding: 5px 6px;
+    cursor: pointer;
+    background-color: #e0e0e0;
+    border: 1px solid #b0b0b0;
+    border-radius: 3px;
+    font-family: Verdana, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    color: #222;
+    outline: none;
+    text-align: center;
+    white-space: nowrap;
+    transition: background-color 0.15s ease;
+}
+
+.colormap-editor-btn:hover:not(:disabled) {
+    background-color: #d5d5d5;
+}
+
+.colormap-editor-btn-danger {
+    color: #aa0000;
+}
+
+.colormap-interval-bar {
+    position: absolute;
+    top: 10px;
+    height: 18px;
+    cursor: grab;
+    border-radius: 3px;
+    border: 1px solid #444;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    z-index: 2;
+}
+
+.colormap-interval-bar.selected {
+    border: 2px solid #0055ff;
+    z-index: 10;
+}
+
+.colormap-handle {
+    position: absolute;
+    top: 4px;
+    width: 10px;
+    height: 30px;
+    margin-left: -5px;
+    cursor: ew-resize;
+    border-radius: 3px;
+    border: 1px solid #333;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    z-index: 3;
+}
+
+.colormap-handle.selected {
+    border: 1px solid #0055ff;
+    background-color: #ffd700;
+    z-index: 11;
+}
+
+.colormap-handle.active {
+    border: 2px solid #0055ff;
+}
+
+input.imgbutton {
+    box-sizing: border-box !important;
+    border: 1px solid transparent !important;
+}
+
+input.imgbutton.pressed {
+    background-color: #bae6fd !important;
+    border-color: #0284c7 !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+}

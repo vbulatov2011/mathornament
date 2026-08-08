@@ -1,0 +1,693 @@
+const MAX_INT = Number.MAX_SAFE_INTEGER;
+
+const DEBUG = false;
+const MYNAME='PARAMS';
+
+function isDefined(v){
+    return (v !== undefined);
+}
+
+//
+// parameter integer
+//
+function ParamInt(arg) {
+    
+    //let min = 0, max = 32000;
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    
+    function createUI(gui){
+        if(isDefined(arg.min) && isDefined(arg.max))
+            control = gui.add(obj, key, arg.min, arg.max, 1);
+        else 
+            control = gui.add(obj, key, 0, MAX_INT,1);
+        
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+            
+        if(!!arg.readOnly) {
+            const input = control.domElement.querySelector('input');
+            if (input) {
+                input.readOnly = true;
+                input.style.cssText += '; cursor:default; pointer-events:none;';
+            }
+        }
+        setupUIEventHandlers(control);
+    }
+    
+    function getValue(){
+        return obj[key];
+    }
+
+    function setValue(value){
+        obj[key] = value;
+        if(control)control.updateDisplay();
+        if(!!arg.onChange)arg.onChange();
+    }
+    
+    function setMax(newMax) {
+        arg.max = newMax;
+        if (control && typeof control.max === 'function') {
+            control.max(newMax);
+        }
+        if (obj[key] > newMax) {
+            setValue(newMax);
+        }
+    }
+    
+    const param = {
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        setMax:   setMax,
+        init:     ()=>{if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{if(control)control.updateDisplay();}),
+        serializable: (arg.serializable !== false),
+    };
+    bindUIHelpers(param, () => control, (val) => {
+        const p = parseInt(val, 10);
+        return isNaN(p) ? obj[key] : p;
+    });
+    return param;
+} // ParamInt(arg)
+
+
+//
+// parameter float
+//
+function ParamFloat(arg) {
+    
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    
+    function createUI(gui){
+        if(!isDefined(obj[key])){
+            console.warn(`undefined property for key key: ${key}: ${obj[key]}`, 'in obj: ', obj);
+            //return;
+        } 
+        if(isDefined(arg.min) && isDefined(arg.max) && isDefined(arg.step))
+            control = gui.add(obj, key, arg.min, arg.max, arg.step);
+        else 
+            control = gui.add(obj, key);
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+        setupUIEventHandlers(control);
+    }
+    
+    function getValue(){
+        return obj[key];
+    }
+    function setValue(value){
+        obj[key] = value;
+        if(control)control.updateDisplay();
+        if(!!arg.onChange)arg.onChange();
+    }
+    const param = {        
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        init:     ()=>{if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{if(control)control.updateDisplay();}),
+        serializable: (arg.serializable !== false),
+    };
+    bindUIHelpers(param, () => control, (val) => {
+        const p = parseFloat(val);
+        return isNaN(p) ? obj[key] : p;
+    });
+    return param;
+}
+
+//
+// parameter choice
+//
+function ParamChoice(arg) {
+    
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    let choice = arg.choice || [];
+    let serializable = (isDefined(arg.serializable))? arg.serializable : true;
+    
+    function createUI(gui){
+        
+        control = gui.add(obj, key, choice);
+
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+        setupUIEventHandlers(control);
+    }
+    
+    function getValue(){
+        return obj[key];
+    }
+    function setValue(value){
+        if(serializable){
+            obj[key] = value;
+            if(control) control.updateDisplay();
+            if(!!arg.onChange)arg.onChange();
+        }
+    }
+    function updateChoices(newChoices) {
+        choice = newChoices || [];
+        if (control && typeof control.updateOptions === 'function') {
+            control.updateOptions(choice);
+        }
+        if (choice.length > 0 && !choice.includes(obj[key])) {
+            setValue(choice[0]);
+        }
+    }
+    const param = {        
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        updateChoices: updateChoices,
+        init:     ()=>{if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{if(control)control.updateDisplay();}),
+        serializable: (arg.serializable !== false),
+    };
+    bindUIHelpers(param, () => control, (val) => val);
+    return param;
+}
+
+
+//
+// parameter color
+//
+function ParamColor(arg) {
+    
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    
+    function createUI(gui){
+        
+        control = gui.addColor(obj, key);
+
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+        
+    }
+    
+    function getValue(){
+        return obj[key];
+    }
+    function setValue(value){
+        obj[key] = value;
+        control.updateDisplay();
+        if(!!arg.onChange)arg.onChange();
+    }
+    return {        
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        init:     ()=>{if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{if(control)control.updateDisplay();}),
+        serializable: (arg.serializable !== false),
+    }
+} // ParamColor
+
+
+//
+// parameter boolean 
+//
+function ParamBool(arg) {
+    
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    
+    function createUI(gui){
+       control = gui.add(arg.obj, arg.key);
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+    }
+    function getValue(){
+        return obj[key];
+    }
+    function setValue(value){
+        obj[key] = value;
+        if(control)control.updateDisplay();
+        if(!!arg.onChange)arg.onChange();
+    }
+    return {
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        init:     ()=>{ if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{if(control)control.updateDisplay();}),
+        serializable: (arg.serializable !== false),
+    }
+}
+
+//
+// parameter string
+//
+function ParamString(arg) {
+    
+    let control = null;
+    let obj = arg.obj;
+    let key = arg.key;
+    if(!obj) {
+        key = 'str';
+        obj = {str : arg.value};
+    }
+        
+    function createUI(gui){
+        control = gui.add(obj, key);
+        if(!!arg.listen)
+            control.listen();
+        if(!!arg.name)
+            control.name(arg.name);
+        if(!!arg.onChange)
+            control.onChange(arg.onChange);
+            
+        if(!!arg.readOnly) {
+            const input = control.domElement.querySelector('input');
+            if (input) {
+                input.readOnly = true;
+                input.style.cssText += '; cursor:default; pointer-events:none;';
+            }
+        }
+
+        if(isDefined(arg.tooltip) && control && control.__li) {
+            const titleVal = (arg.tooltip === true) ? obj[key] : arg.tooltip;
+            control.__li.setAttribute('title', titleVal);
+        }
+        setupUIEventHandlers(control);
+    }
+    function getValue(){
+        return obj[key];
+    }
+    function setValue(value){
+        obj[key] = value;
+        if(control) {
+            control.updateDisplay();
+            if(isDefined(arg.tooltip) && control.__li) {
+                const titleVal = (arg.tooltip === true) ? value : arg.tooltip;
+                control.__li.setAttribute('title', titleVal);
+            }
+        }
+        if(!!arg.onChange)arg.onChange();
+    }
+    const param = {
+        setValue: setValue,
+        getValue: getValue,
+        createUI: createUI,
+        init:     ()=>{if(control){obj[key] = control.initialValue; control.updateDisplay();}},
+        updateDisplay:  (()=>{
+            if(control) {
+                control.updateDisplay();
+                if(isDefined(arg.tooltip) && control.__li) {
+                    const titleVal = (arg.tooltip === true) ? obj[key] : arg.tooltip;
+                    control.__li.setAttribute('title', titleVal);
+                }
+            }
+        }),
+        serializable: (arg.serializable !== false),
+    };
+    bindUIHelpers(param, () => control, (val) => val);
+    return param;
+}
+
+//
+// ParamGroup - group of other parameters 
+//
+function ParamGroup(arg){
+    
+    let folder = null;
+    arg = arg || {};
+    let params = arg.params || {};
+    let folderName = isDefined(arg.name)? arg.name: 'folder';
+    
+    
+    let myself = {
+        setValue: setValue,
+        getValue: getValue,        
+        createUI: createUI,
+        init:     init,
+        updateDisplay: () => {
+            Object.values(params).forEach(p => {
+                if (p.updateDisplay) p.updateDisplay();
+            });
+        },
+        serializable: (arg.serializable !== false),
+    };
+    
+    // make individual parameters accessible via properties
+    Object.assign(myself, params);
+    
+    function createUI(gui){
+       folder = gui.addFolder(folderName);
+       createParamUI(folder, params);
+    }    
+    function getValue(){
+        return getParamValues(params);
+    }
+    
+    function setValue(value, initialize=false){
+        setParamValues(params, value, initialize);
+    }
+
+    function init(value){
+        initParamValues(params);
+        updateParamDisplay(params);            
+    }
+
+
+    
+    return myself;
+    
+} // ParamGroup
+
+
+
+//
+// ParamFunc - parameter function call 
+//
+function ParamFunc(arg){
+    
+    let control = null;
+    let targetFn = arg.func || arg.action;
+    let fname = isDefined(arg.name) ? arg.name : (targetFn ? targetFn.name : 'func');
+    
+    function createUI(gui){
+       // Wrap the function to ensure dat.GUI recognizes it, even if it's an async function
+       control = gui.add({func: (...args) => targetFn(...args)}, 'func').name(fname);
+       if (!!arg.tooltip && control && control.__li) {
+           control.__li.setAttribute('title', arg.tooltip);
+       }
+    }    
+    return {
+        setName:     (newName)=>{if(control) control.name(newName);},
+        createUI: createUI,
+        serializable: (arg.serializable !== false),
+    }
+    
+}
+
+// ParamCustom
+//
+// parameter with custom bahavior
+// arg.getValue
+// arg.setValue
+// arg.createUI  
+// arg.updateDisplay
+// arg.init 
+//
+function ParamCustom(arg){
+    
+    let _getValue      = arg.getValue;
+    let _setValue      = arg.setValue;
+    let _createUI      = arg.createUI;
+    let _updateDisplay = arg.updateDisplay;
+    let _init          = arg.init;
+        
+    function getValue(){
+        if(!!_getValue)
+            return _getValue();
+        else 
+            return {};
+    }
+    
+    function setValue(value){
+        if(!!_setValue)
+            return _setValue(value);
+    }
+
+    function createUI(gui){
+        if(!!_createUI)
+            return _createUI(gui);
+    }
+    
+    function updateDisplay(){
+        if(!!_updateDisplay)
+            _updateDisplay();
+    }
+
+    function init(){
+        if(!!_init)
+            _init();
+    }
+    
+    return {
+        setValue:      setValue,
+        getValue:      getValue,
+        createUI:      (_createUI) ? undefined : createUI,
+        init:          (_init)     ? undefined : init,
+        updateDisplay: updateDisplay,
+        serializable:  (arg.serializable !== false),
+    };
+    
+}
+
+
+
+//
+//  recursively creates UI for the given UI parameters 
+//
+function createParamUI(gui, params){
+    if(DEBUG)console.log(`${MYNAME}.createParamUI()`, params); 
+    if(isDefined(params.createUI)){
+        
+        if(DEBUG)console.log(`${MYNAME}}.createParamUI() calling createUI() for `, params);        
+        // params can create UI 
+        params.createUI(gui);
+        
+    } else {
+        if(DEBUG)console.log(`${MYNAME}.createParamUI() processing params array`, params);        
+        // a bunch of params 
+        let keys = Object.keys(params);
+        
+        for(let i = 0; i < keys.length; i++){
+            let uipar = params[keys[i]];
+            if(DEBUG)console.log(`${MYNAME}.createParamUI() uipar[${keys[i]}] = `, uipar);
+            if(!!uipar.createUI){ 
+                if(DEBUG)console.log(`${MYNAME}.createParamUI() calling createUI() for `, uipar);
+                uipar.createUI(gui);
+            }
+        }    
+    }
+}
+
+
+//
+//   return JSON suitable representation of params represented by given params 
+//
+/**
+ * Collect JSON-safe param values.
+ * @param {object} params
+ */
+function getParamValues(params){
+    
+    if(DEBUG)console.log('getParamValues():', params);
+    if(isDefined(params.getValue)){
+        return params.getValue();
+    } else {
+        let out = {};
+        for(var key in params){
+            let param = params[key];
+            if(DEBUG)console.log(`key: '${key}' param: `, param);
+            if(param.serializable === false) continue;
+            if(isDefined(param.getValue)) out[key] = param.getValue();
+        }
+        return out;
+    }
+}
+
+
+//
+//   set the params object to values supplied by given values
+//   initialize all values if necessary
+//
+/**
+ * Apply stored param values.
+ * @param {object} params
+ * @param {object} values
+ * @param {boolean} [initialize]
+ */
+function setParamValues(params, values, initialize = false){
+    
+    if(DEBUG)console.log('setParamValues() params:', params);
+    if(DEBUG)console.log('                 values:', values);
+    if(isDefined(params.setValue)){
+        if(DEBUG)console.log('calling params.setValue()');
+        params.setValue(values, initialize);
+    } else {
+        if(DEBUG)console.log('setting individual values');
+        if(initialize){
+            if(DEBUG)console.log('initializing params');
+            for(var key in params){
+                let param = params[key];
+                if(param.init) param.init();
+            }
+        }
+        if(DEBUG)console.log('  setting individual param values');
+        for(var key in values){
+            let param = params[key];
+            if(isDefined(param)){
+                if(param.serializable === false) continue;
+                if(DEBUG)console.log(`key: '${key}' param: `, param);
+                if(isDefined(param.setValue)){
+                    if(DEBUG)console.log(`setValue(param.${key})`);
+                    param.setValue(values[key]);
+                }
+            }
+        }
+    }
+} 
+
+
+//
+//  call init() for each param in params object
+//
+function initParamValues(params){
+    
+    if(isDefined(params.init)){
+        params.init();
+    } else {
+        for(var key in params){            
+            let param = params[key];
+            if(isDefined(param)){
+                if(param.serializable === false) continue;  // transient — don't reset on load
+                if(DEBUG)console.log(`key: '${key}' param: `, param);            
+                if(isDefined(param.init)){
+                    if(DEBUG)console.log(`param.${key}.init()`);  
+                    param.init();
+                }
+            }
+        }    
+    }
+    
+}
+
+
+function updateParamDisplay(params){
+    
+    if(isDefined(params.updateDisplay)){
+        params.updateDisplay();
+    } else {
+        for(var key in params){            
+            let param = params[key];
+            if(isDefined(param)){
+                if(DEBUG)console.log(`key: '${key}' param: `, param);            
+                if(isDefined(param.updateDisplay)){
+                    if(DEBUG)console.log(`updateDisplay(param.${key})`);  
+                    param.updateDisplay();
+                }
+            }
+        }    
+    }
+    
+}
+
+function setupUIEventHandlers(control) {
+    if (control) {
+        const el = control.domElement.querySelector('input, select');
+        if (el) {
+            el.addEventListener('input', () => {
+                el.style.borderColor = '';
+            });
+            el.addEventListener('change', () => {
+                el.style.borderColor = '';
+            });
+        }
+    }
+}
+
+function bindUIHelpers(param, getControl, parseFn) {
+    param.setError = (hasError) => {
+        const control = getControl();
+        if (control) {
+            const el = control.domElement.querySelector('input, select');
+            if (el) {
+                el.style.borderColor = hasError ? '#c00' : '';
+            }
+        }
+    };
+
+    param.focus = () => {
+        const control = getControl();
+        if (control) {
+            const el = control.domElement.querySelector('input, select');
+            if (el) {
+                el.focus();
+            }
+        }
+    };
+
+    param.select = () => {
+        const control = getControl();
+        if (control) {
+            const el = control.domElement.querySelector('input, select');
+            if (el && typeof el.select === 'function') {
+                el.select();
+            }
+        }
+    };
+
+    param.scrollToEnd = () => {
+        const control = getControl();
+        if (control) {
+            const el = control.domElement.querySelector('input, select');
+            if (el) {
+                setTimeout(() => {
+                    el.scrollLeft = el.scrollWidth;
+                }, 0);
+            }
+        }
+    };
+
+    param.syncValue = () => {
+        const control = getControl();
+        if (control) {
+            const el = control.domElement.querySelector('input, select');
+            if (el) {
+                let val = el.value;
+                if (parseFn) {
+                    val = parseFn(val);
+                }
+                param.setValue(val);
+            }
+        }
+    };
+}
+
+
+export {
+    ParamChoice,
+    ParamInt, 
+    ParamBool, 
+    ParamFloat, 
+    ParamFunc,
+    ParamGroup, 
+    ParamColor,
+    ParamString,
+    ParamCustom,
+    createParamUI,
+    getParamValues,
+    setParamValues,
+    initParamValues,
+    updateParamDisplay,
+}

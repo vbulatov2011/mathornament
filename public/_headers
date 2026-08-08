@@ -1,0 +1,28 @@
+# Static-asset headers. Pages rendered by the Worker (/view/*, /user/*) set
+# their own equivalent policy in src/worker.js (PAGE_CSP).
+
+/
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://lh3.googleusercontent.com; connect-src 'self'; frame-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+
+/apps/symsim/gray_scott/edit
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+
+/apps/symsim/gray_scott/symsim_gray_scott_wp
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+
+/apps/symsim/gray_scott/symsim_gray_scott_simple
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff
+
+# The embedded viewer is framed by our own pattern pages, so it allows framing
+# from this origin only (the other pages use frame-ancestors 'none').
+/apps/symsim/gray_scott/embed
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'
+  X-Content-Type-Options: nosniff
+
+/apps/symsim/gray_scott/symsim_gray_scott_thumb_wp
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'
+  X-Content-Type-Options: nosniff

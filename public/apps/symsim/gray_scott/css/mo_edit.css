@@ -1,0 +1,479 @@
+/* MathOrnament overlay for the symsim editor page.
+ *
+ * This page does not load /site.css (it has the vendored app's own stylesheet
+ * chain), so the palette is repeated here — same variable names, same values,
+ * following the OS light/dark setting. */
+
+:root {
+    color-scheme: light dark;
+
+    --mol-panel: #ffffff;
+    --mol-panel-2: #eef1f6;
+    --mol-hover: #e3e8f1;
+    --mol-border: #dce1ea;
+    --mol-text: #131a26;
+    --mol-muted: #5c6879;
+    --mol-brand: #2456c4;
+    --mol-brand-hi: #1c48ab;
+    --mol-on-brand: #ffffff;
+    --mol-danger: #b02341;
+    --mol-bar: rgba(255, 255, 255, 0.92);
+    --mol-scrim: rgba(19, 26, 38, 0.35);
+    --mol-shadow: 0 18px 60px rgba(19, 26, 38, 0.22);
+
+    --mod-panel: #101623;
+    --mod-panel-2: #16202f;
+    --mod-hover: #223148;
+    --mod-border: #2a3852;
+    --mod-text: #dbe4f5;
+    --mod-muted: #9aa7bd;
+    --mod-brand: #2456c4;
+    --mod-brand-hi: #2f66dd;
+    --mod-on-brand: #ffffff;
+    --mod-danger: #ff8f8f;
+    --mod-bar: rgba(11, 14, 20, 0.86);
+    --mod-scrim: rgba(0, 0, 0, 0.6);
+    --mod-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+    --mo-panel: var(--mol-panel);
+    --mo-panel-2: var(--mol-panel-2);
+    --mo-hover: var(--mol-hover);
+    --mo-border: var(--mol-border);
+    --mo-text: var(--mol-text);
+    --mo-muted: var(--mol-muted);
+    --mo-brand: var(--mol-brand);
+    --mo-brand-hi: var(--mol-brand-hi);
+    --mo-on-brand: var(--mol-on-brand);
+    --mo-danger: var(--mol-danger);
+    --mo-bar: var(--mol-bar);
+    --mo-scrim: var(--mol-scrim);
+    --mo-shadow: var(--mol-shadow);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --mo-panel: var(--mod-panel);
+        --mo-panel-2: var(--mod-panel-2);
+        --mo-hover: var(--mod-hover);
+        --mo-border: var(--mod-border);
+        --mo-text: var(--mod-text);
+        --mo-muted: var(--mod-muted);
+        --mo-brand: var(--mod-brand);
+        --mo-brand-hi: var(--mod-brand-hi);
+        --mo-on-brand: var(--mod-on-brand);
+        --mo-danger: var(--mod-danger);
+        --mo-bar: var(--mod-bar);
+        --mo-scrim: var(--mod-scrim);
+        --mo-shadow: var(--mod-shadow);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --mo-panel: var(--mod-panel);
+    --mo-panel-2: var(--mod-panel-2);
+    --mo-hover: var(--mod-hover);
+    --mo-border: var(--mod-border);
+    --mo-text: var(--mod-text);
+    --mo-muted: var(--mod-muted);
+    --mo-brand: var(--mod-brand);
+    --mo-brand-hi: var(--mod-brand-hi);
+    --mo-on-brand: var(--mod-on-brand);
+    --mo-danger: var(--mod-danger);
+    --mo-bar: var(--mod-bar);
+    --mo-scrim: var(--mod-scrim);
+    --mo-shadow: var(--mod-shadow);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+    --mo-panel: var(--mol-panel);
+    --mo-panel-2: var(--mol-panel-2);
+    --mo-hover: var(--mol-hover);
+    --mo-border: var(--mol-border);
+    --mo-text: var(--mol-text);
+    --mo-muted: var(--mol-muted);
+    --mo-brand: var(--mol-brand);
+    --mo-brand-hi: var(--mol-brand-hi);
+    --mo-on-brand: var(--mol-on-brand);
+    --mo-danger: var(--mol-danger);
+    --mo-bar: var(--mol-bar);
+    --mo-scrim: var(--mol-scrim);
+    --mo-shadow: var(--mol-shadow);
+}
+
+.mo-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 200000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--mo-bar);
+    border-bottom-left-radius: 10px;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    backdrop-filter: blur(6px);
+}
+
+.mo-brand {
+    color: var(--mo-muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+}
+
+.mo-btn {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--mo-border);
+    border-radius: 7px;
+    background: var(--mo-panel-2);
+    color: var(--mo-text);
+    font-size: 13px;
+    line-height: 1.2;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.mo-btn:hover { background: var(--mo-hover); }
+
+.mo-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.mo-btn:disabled:hover { background: var(--mo-panel-2); }
+
+.mo-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.mo-share {
+    background: var(--mo-brand);
+    border-color: var(--mo-brand-hi);
+    color: var(--mo-on-brand);
+    font-weight: 600;
+}
+
+.mo-share:hover { background: var(--mo-brand-hi); color: var(--mo-on-brand); }
+
+.mo-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200001;
+    background: var(--mo-scrim);
+    display: grid;
+    place-items: center;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.mo-dialog {
+    position: relative;
+    width: min(420px, calc(100vw - 40px));
+    max-height: calc(100vh - 60px);
+    overflow: auto;
+    background: var(--mo-panel);
+    color: var(--mo-text);
+    border: 1px solid var(--mo-border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--mo-shadow);
+}
+
+.mo-dialog h2 {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 650;
+}
+
+.mo-dialog-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: none;
+    color: var(--mo-muted);
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.mo-thumb-preview {
+    display: block;
+    width: 128px;
+    height: 128px;
+    border-radius: 8px;
+    border: 1px solid var(--mo-border);
+    margin: 0 0 12px;
+}
+
+.mo-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--mo-border);
+    border-radius: 7px;
+    background: var(--mo-panel);
+    color: var(--mo-text);
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.mo-input:disabled { opacity: 0.6; }
+
+.mo-textarea {
+    min-height: 62px;
+    resize: vertical;
+}
+
+.mo-select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--mo-muted) 50%),
+                      linear-gradient(135deg, var(--mo-muted) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 15px, calc(100% - 11px) 15px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
+/* On a phone the vendored app can widen the layout viewport, which pushes a
+   right-anchored bar off-screen. Anchor left and let it wrap instead. */
+@media (max-width: 720px) {
+    .mo-bar {
+        left: 0;
+        right: auto;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 10px;
+        flex-wrap: wrap;
+        max-width: 100vw;
+    }
+    .mo-brand { display: none; }
+}
+
+.mo-secondary {
+    margin-top: 10px;
+    background: none;
+    border-color: var(--mo-border);
+}
+
+.mo-who {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--mo-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mo-publish {
+    background: var(--mo-brand);
+    border-color: var(--mo-brand-hi);
+    color: var(--mo-on-brand);
+    font-weight: 600;
+}
+
+.mo-status {
+    margin: 10px 0 6px;
+    font-size: 13px;
+    color: var(--mo-muted);
+}
+
+.mo-err { color: var(--mo-danger); }
+
+.mo-result {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.mo-result .mo-link {
+    flex: 1;
+    margin: 0;
+    font-size: 12px;
+}
+
+/* Shown when the device cannot run the simulator at all (e.g. no WebGL2),
+   in place of a blank page. */
+.mo-fatal {
+    position: fixed;
+    inset: 0;
+    z-index: 200002;
+    display: grid;
+    place-content: center;
+    justify-items: start;
+    gap: 10px;
+    padding: 24px;
+    max-width: 34em;
+    margin: 0 auto;
+    background: var(--mo-panel);
+    color: var(--mo-text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+}
+.mo-fatal h1 { margin: 0; font-size: 20px; }
+.mo-fatal p { margin: 0; color: var(--mo-muted); }
+
+/* ══ phone layout ══════════════════════════════════════════════════════════
+ * Applied only when mo_edit.js sets data-mo-phone on <html>. In this mode the
+ * renderer runs with useSimpleUI, so the canvas is a direct child of <body>
+ * and fills the viewport; everything below removes the desktop chrome and adds
+ * finger-sized controls. */
+
+:root[data-mo-phone] .mo-bar { display: none; }
+
+/* Every vendored floating window (toolbox, sample browser, settings, plots).
+   display:none, not visibility:hidden — a merely hidden 600px-wide window is
+   still laid out and makes the page wider than the phone, which is what made
+   Android shrink-to-fit the whole UI. */
+:root[data-mo-phone] body > .drag-style { display: none !important; }
+
+/* The toolbox is re-parented into #canvasContainer in simple-UI mode. Keep it
+   in the DOM (the renderer writes to its buttons) but out of sight; our own
+   bar forwards clicks to it. */
+:root[data-mo-phone] #canvasContainer > div { display: none !important; }
+
+/* `:root html` can never match (root IS <html>) — the declarations have to
+   land on the root element itself for overscroll-behavior and the page
+   background to take effect. */
+:root[data-mo-phone],
+:root[data-mo-phone] body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    overscroll-behavior: none;   /* no pull-to-refresh while drawing */
+    background: var(--mo-panel);
+}
+
+:root[data-mo-phone] #canvasContainer {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    touch-action: none;
+}
+
+:root[data-mo-phone] #canvasContainer canvas.layeredCanvas {
+    touch-action: none;          /* the load-bearing rule for finger drawing */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── our own controls ── */
+
+.mo-ptop,
+.mo-pbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 200000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    pointer-events: none;        /* the gaps stay drawable */
+}
+
+.mo-ptop { top: 0; padding-top: max(8px, env(safe-area-inset-top)); }
+
+.mo-pbar {
+    bottom: 0;
+    justify-content: center;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+.mo-pspacer { flex: 1; }
+
+.mo-pbtn {
+    pointer-events: auto;
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--mo-border);
+    border-radius: 12px;
+    background: var(--mo-bar);
+    color: var(--mo-text);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.mo-pbtn svg { width: 22px; height: 22px; display: block; }
+.mo-pbtn:disabled { opacity: 0.45; }
+.mo-pbtn.is-active {
+    background: var(--mo-brand);
+    border-color: var(--mo-brand-hi);
+    color: var(--mo-on-brand);
+}
+
+.mo-ppublish {
+    background: var(--mo-brand);
+    border-color: var(--mo-brand-hi);
+    color: var(--mo-on-brand);
+}
+
+.mo-pdivider {
+    width: 1px;
+    height: 26px;
+    background: var(--mo-border);
+    opacity: 0.7;
+}
+
+/* The publish dialog becomes a bottom sheet that never hides its own button
+   behind the URL bar (100vh is the URL-bar-retracted height on Android). */
+:root[data-mo-phone] .mo-dialog {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 14px 14px 0 0;
+    align-self: end;
+}
+:root[data-mo-phone] .mo-dialog-backdrop { place-items: end center; }
+:root[data-mo-phone] .mo-input { font-size: 16px; }  /* iOS/Android: no zoom on focus */
+
+/* Gestures starting on our bars must not fall through to pull-to-refresh. */
+:root[data-mo-phone] .mo-ptop,
+:root[data-mo-phone] .mo-pbar,
+:root[data-mo-phone] .mo-pbtn { touch-action: none; }
+
+/* Finger-sized controls inside the publish sheet. */
+:root[data-mo-phone] .mo-dialog-close {
+    top: 6px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    font-size: 26px;
+    line-height: 1;
+}
+:root[data-mo-phone] .mo-publish,
+:root[data-mo-phone] .mo-dialog .mo-btn { min-height: 44px; padding: 10px 16px; }
+
+/* Full-screen toggle in the desktop bar: icon-only, same height as the rest. */
+.mo-full {
+    display: inline-grid;
+    place-items: center;
+    padding: 5px 10px;
+    line-height: 0;
+}
+.mo-full svg { width: 17px; height: 17px; display: block; }
+
+/* Nothing on the page should stay pinned above the pattern in full screen
+   except our own controls, which are already fixed-position. */
+:root:fullscreen #canvasContainer,
+:root:-webkit-full-screen #canvasContainer { background: var(--mo-panel); }

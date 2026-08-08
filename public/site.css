@@ -1,0 +1,481 @@
+/* MathOrnament — shared design system for gallery, pattern page and profiles.
+ *
+ * Theming: the palette values below are the single source of truth. The active
+ * theme follows the OS unless the visitor picks one in the nav, which sets
+ * data-theme on <html> (see theme.js) and always wins. */
+
+:root {
+    color-scheme: light dark;
+
+    /* ── light values ── */
+    --l-bg: #f6f7fa;
+    --l-panel: #ffffff;
+    --l-panel-2: #eef1f6;
+    --l-hover: #e3e8f1;
+    --l-border: #dce1ea;
+    --l-border-hi: #aab6c8;
+    --l-text: #131a26;
+    --l-text-strong: #000000;
+    --l-muted: #5c6879;
+    --l-accent: #1552c9;
+    --l-brand: #2456c4;
+    --l-brand-hi: #1c48ab;
+    --l-on-brand: #ffffff;
+    --l-like: #d92a5b;
+    --l-danger-border: #e2b6c0;
+    --l-danger-fg: #b02341;
+    --l-danger-bg: #fbeef1;
+    --l-nav-bg: rgba(255, 255, 255, 0.92);
+    --l-overlay: rgba(255, 255, 255, 0.92);
+    --l-scrim: rgba(19, 26, 38, 0.35);
+    --l-scrim-soft: rgba(255, 255, 255, 0.6);
+    --l-tint-a: #dfe6f5;
+    --l-tint-b: #e7e2f3;
+    --l-shadow: 0 8px 24px rgba(19, 26, 38, 0.10);
+
+    /* ── dark values ── */
+    --d-bg: #0b0e14;
+    --d-panel: #101623;
+    --d-panel-2: #16202f;
+    --d-hover: #223148;
+    --d-border: #223048;
+    --d-border-hi: #3a5581;
+    --d-text: #dbe4f5;
+    --d-text-strong: #ffffff;
+    --d-muted: #8899b4;
+    --d-accent: #7fb4ff;
+    --d-brand: #2456c4;
+    --d-brand-hi: #2f66dd;
+    --d-on-brand: #ffffff;
+    --d-like: #ff5c7a;
+    --d-danger-border: #6a2537;
+    --d-danger-fg: #ff9db0;
+    --d-danger-bg: #2a1520;
+    --d-nav-bg: rgba(11, 14, 20, 0.9);
+    --d-overlay: rgba(16, 22, 35, 0.92);
+    --d-scrim: rgba(0, 0, 0, 0.55);
+    --d-scrim-soft: rgba(5, 7, 12, 0.55);
+    --d-tint-a: #1b2a45;
+    --d-tint-b: #24203f;
+    --d-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+    /* Default: light. */
+    --bg: var(--l-bg);
+    --panel: var(--l-panel);
+    --panel-2: var(--l-panel-2);
+    --hover: var(--l-hover);
+    --border: var(--l-border);
+    --border-hi: var(--l-border-hi);
+    --text: var(--l-text);
+    --text-strong: var(--l-text-strong);
+    --muted: var(--l-muted);
+    --accent: var(--l-accent);
+    --brand: var(--l-brand);
+    --brand-hi: var(--l-brand-hi);
+    --on-brand: var(--l-on-brand);
+    --like: var(--l-like);
+    --danger-border: var(--l-danger-border);
+    --danger-fg: var(--l-danger-fg);
+    --danger-bg: var(--l-danger-bg);
+    --nav-bg: var(--l-nav-bg);
+    --overlay: var(--l-overlay);
+    --scrim: var(--l-scrim);
+    --scrim-soft: var(--l-scrim-soft);
+    --tint-a: var(--l-tint-a);
+    --tint-b: var(--l-tint-b);
+    --shadow: var(--l-shadow);
+}
+
+/* Follow the system, unless the visitor explicitly chose light. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: var(--d-bg);
+        --panel: var(--d-panel);
+        --panel-2: var(--d-panel-2);
+        --hover: var(--d-hover);
+        --border: var(--d-border);
+        --border-hi: var(--d-border-hi);
+        --text: var(--d-text);
+        --text-strong: var(--d-text-strong);
+        --muted: var(--d-muted);
+        --accent: var(--d-accent);
+        --brand: var(--d-brand);
+        --brand-hi: var(--d-brand-hi);
+        --on-brand: var(--d-on-brand);
+        --like: var(--d-like);
+        --danger-border: var(--d-danger-border);
+        --danger-fg: var(--d-danger-fg);
+        --danger-bg: var(--d-danger-bg);
+        --nav-bg: var(--d-nav-bg);
+        --overlay: var(--d-overlay);
+        --scrim: var(--d-scrim);
+        --scrim-soft: var(--d-scrim-soft);
+        --tint-a: var(--d-tint-a);
+        --tint-b: var(--d-tint-b);
+        --shadow: var(--d-shadow);
+    }
+}
+
+/* An explicit choice overrides the system in both directions. */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+        --bg: var(--d-bg);
+        --panel: var(--d-panel);
+        --panel-2: var(--d-panel-2);
+        --hover: var(--d-hover);
+        --border: var(--d-border);
+        --border-hi: var(--d-border-hi);
+        --text: var(--d-text);
+        --text-strong: var(--d-text-strong);
+        --muted: var(--d-muted);
+        --accent: var(--d-accent);
+        --brand: var(--d-brand);
+        --brand-hi: var(--d-brand-hi);
+        --on-brand: var(--d-on-brand);
+        --like: var(--d-like);
+        --danger-border: var(--d-danger-border);
+        --danger-fg: var(--d-danger-fg);
+        --danger-bg: var(--d-danger-bg);
+        --nav-bg: var(--d-nav-bg);
+        --overlay: var(--d-overlay);
+        --scrim: var(--d-scrim);
+        --scrim-soft: var(--d-scrim-soft);
+        --tint-a: var(--d-tint-a);
+        --tint-b: var(--d-tint-b);
+        --shadow: var(--d-shadow);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+        --bg: var(--l-bg);
+        --panel: var(--l-panel);
+        --panel-2: var(--l-panel-2);
+        --hover: var(--l-hover);
+        --border: var(--l-border);
+        --border-hi: var(--l-border-hi);
+        --text: var(--l-text);
+        --text-strong: var(--l-text-strong);
+        --muted: var(--l-muted);
+        --accent: var(--l-accent);
+        --brand: var(--l-brand);
+        --brand-hi: var(--l-brand-hi);
+        --on-brand: var(--l-on-brand);
+        --like: var(--l-like);
+        --danger-border: var(--l-danger-border);
+        --danger-fg: var(--l-danger-fg);
+        --danger-bg: var(--l-danger-bg);
+        --nav-bg: var(--l-nav-bg);
+        --overlay: var(--l-overlay);
+        --scrim: var(--l-scrim);
+        --scrim-soft: var(--l-scrim-soft);
+        --tint-a: var(--l-tint-a);
+        --tint-b: var(--l-tint-b);
+        --shadow: var(--l-shadow);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ── top navigation ─────────────────────────────────────────────────────── */
+
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--nav-bg);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+}
+
+.nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.nav-brand {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+.nav-brand:hover { text-decoration: none; color: var(--text-strong); }
+
+.nav-search {
+    flex: 1;
+    max-width: 420px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+}
+
+.nav-spacer { flex: 1; }
+
+.nav-link {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.nav-link:hover { color: var(--text); text-decoration: none; }
+
+.nav-user { display: flex; align-items: center; gap: 8px; }
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    object-fit: cover;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.avatar-lg { width: 84px; height: 84px; font-size: 32px; }
+
+/* ── buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn:hover { background: var(--hover); text-decoration: none; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:disabled:hover { background: var(--panel-2); }
+
+.btn-primary { background: var(--brand); border-color: var(--brand-hi); color: var(--on-brand); font-weight: 600; }
+.btn-primary:hover { background: var(--brand-hi); color: var(--on-brand); }
+
+.btn-danger { border-color: var(--danger-border); color: var(--danger-fg); }
+.btn-danger:hover { background: var(--danger-bg); }
+
+.btn-like.liked { border-color: var(--like); color: var(--like); }
+
+/* ── cards / grid ───────────────────────────────────────────────────────── */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.card {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel);
+    color: var(--text);
+    transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.card:hover { transform: translateY(-2px); border-color: var(--border-hi); box-shadow: var(--shadow); text-decoration: none; }
+
+.card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: var(--panel-2);
+}
+.card img.broken { opacity: 0; }
+.card:has(img.broken) {
+    background:
+        radial-gradient(circle at 30% 30%, var(--tint-a) 0%, transparent 55%),
+        radial-gradient(circle at 70% 65%, var(--tint-b) 0%, transparent 55%),
+        var(--panel);
+}
+
+.card-label { padding: 10px 12px; }
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-sub {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-stats { margin-left: auto; display: flex; gap: 8px; flex: none; }
+
+/* Featured presets: the whole tile opens the editor; a small translucent icon
+   over the artwork is the only visible hint, so it stays out of the way. */
+.preset-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.preset-open {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    flex: 1;
+}
+.preset-open:hover { text-decoration: none; }
+
+.preset-action {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--overlay);
+    color: var(--text);
+    opacity: 0.5;
+    backdrop-filter: blur(4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.preset-action svg { width: 15px; height: 15px; display: block; }
+.preset-action:hover,
+.preset-action:focus-visible { opacity: 1; transform: scale(1.08); text-decoration: none; }
+.card:hover .preset-action { opacity: 0.85; }
+
+@media (hover: none) {
+    /* No hover to reveal it on touch, so keep it legible at rest. */
+    .preset-action { opacity: 0.8; }
+}
+
+/* ── misc ───────────────────────────────────────────────────────────────── */
+
+.section-head { margin: 28px 0 14px; }
+.section-head h2 { margin: 0; font-size: 20px; }
+.section-sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+
+.empty { color: var(--muted); font-size: 14px; }
+
+.tag {
+    display: inline-block;
+    padding: 2px 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel-2);
+    color: var(--muted);
+    font-size: 12px;
+}
+a.tag:hover { color: var(--text); border-color: var(--border-hi); text-decoration: none; }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.input {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+}
+
+textarea.input { min-height: 74px; resize: vertical; }
+
+footer.site-footer {
+    max-width: 1200px;
+    margin: 40px auto 0;
+    padding: 16px 24px 40px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+}
+
+/* The nav is one non-wrapping row, which is wider than a phone; let it wrap so
+   no page scrolls sideways. Every page picks this up from the shared sheet. */
+@media (max-width: 720px) {
+    .nav-inner { flex-wrap: wrap; gap: 8px 10px; padding: 8px 16px; }
+    .nav-brand { font-size: 15px; }
+    .nav-link { font-size: 13px; }
+    .nav-user .btn { padding: 5px 9px; font-size: 12px; }
+    .nav-spacer { display: none; }
+    .nav-user { margin-left: auto; }
+    .nav-search { order: 9; flex: 1 1 100%; max-width: none; min-width: 0; }
+}
+
+@media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border-hi);
+    font-size: 14px;
+    box-shadow: var(--shadow);
+}
+
+/* Theme selector in the nav: compact, icon-only. */
+.theme-toggle {
+    padding: 6px 10px;
+    font-size: 15px;
+    line-height: 1;
+    min-width: 34px;
+    justify-content: center;
+}

@@ -1,0 +1,335 @@
+/* MathOrnament — pattern page (/view/<id>): live viewer, metadata, comments. */
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Longhand: the shorthand would cancel the horizontal gutter .wrap sets. */
+.view { padding-top: 20px; padding-bottom: 8px; }
+.view-boot { padding: 18px 0; }
+
+/* ── live viewer ─────────────────────────────────────────────────────────── */
+
+.view-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: min(64vh, 640px);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 30% 30%, var(--tint-a) 0%, transparent 55%),
+        radial-gradient(circle at 72% 68%, var(--tint-b) 0%, transparent 55%),
+        var(--panel-2);
+}
+
+.view-stage iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.stage-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    transition: opacity 0.7s ease;
+}
+.view-stage.is-live .stage-poster { opacity: 0; }
+
+.stage-note {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: var(--overlay);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+.view-stage.is-live .stage-note { opacity: 0; visibility: hidden; }
+
+/* Manual start (data-saver mode) */
+.stage-start {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    align-content: center;
+    background: var(--scrim-soft);
+    border: 0;
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+.stage-start:hover { background: transparent; }
+.stage-start .stage-start-icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border-hi);
+    background: var(--overlay);
+    font-size: 20px;
+}
+.stage-start .stage-start-text { font-size: 13px; color: var(--muted); }
+
+/* ── body layout ─────────────────────────────────────────────────────────── */
+
+/* DOM order is head → aside → comments, so on narrow screens the parameters
+   panel lands above the comment thread; on wide screens it moves to the right. */
+.view-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-areas:
+        "head     side"
+        "comments side";
+    gap: 0 34px;
+    align-items: start;
+    margin-top: 18px;
+}
+.view-head { grid-area: head; min-width: 0; }
+.view-aside { grid-area: side; align-self: start; min-width: 0; }
+.view-comments { grid-area: comments; min-width: 0; }
+
+@media (max-width: 900px) {
+    .view-body {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "head" "side" "comments";
+    }
+}
+
+/* ── title block ─────────────────────────────────────────────────────────── */
+
+.view-title {
+    margin: 0 0 8px;
+    font-size: 27px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.byline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    font-size: 14px;
+    color: var(--muted);
+    min-width: 0;
+}
+.byline .author { color: var(--text); font-weight: 600; }
+.byline .sep { opacity: 0.5; }
+
+.statline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: var(--muted);
+}
+.statline b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+.notice {
+    margin: 12px 0 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-hi);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 0;
+}
+.actions .action-sep {
+    width: 1px;
+    align-self: stretch;
+    margin: 2px 6px;
+    background: var(--border);
+}
+.like-count { font-variant-numeric: tabular-nums; }
+
+.view-desc {
+    margin: 18px 0 0;
+    max-width: 68ch;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.parent-note { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
+
+.view-tags { margin: 16px 0 0; }
+
+/* ── aside: parameters ───────────────────────────────────────────────────── */
+
+.params-card { padding: 0; margin: 4px 0 0; }
+@media (max-width: 900px) { .params-card { margin: 24px 0 4px; } }
+
+.params-card > summary {
+    padding: 11px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.params-card > summary::-webkit-details-marker { display: none; }
+.params-card > summary::before {
+    content: "▸";
+    color: var(--muted);
+    font-size: 11px;
+}
+.params-card[open] > summary::before { content: "▾"; }
+.params-card > summary:hover { background: var(--panel-2); }
+.params-card[open] > summary { border-bottom: 1px solid var(--border); }
+
+.params-body { padding: 12px 14px 14px; }
+
+.dl { margin: 0; font-size: 13px; }
+.dl-row {
+    display: grid;
+    grid-template-columns: minmax(0, 11ch) minmax(0, 1fr);
+    gap: 4px 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+}
+.dl-row:last-child { border-bottom: 0; }
+.dl dt { color: var(--muted); }
+.dl dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+.dl dd .sub { color: var(--muted); font-variant-numeric: normal; }
+
+/* ── comments ────────────────────────────────────────────────────────────── */
+
+.view-comments { margin-top: 26px; }
+
+.composer { margin: 0 0 22px; max-width: 68ch; }
+.composer-label {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.composer-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+}
+.composer-hint { font-size: 12px; color: var(--muted); }
+.composer-row .btn { margin-left: auto; }
+
+.signin-prompt {
+    padding: 14px;
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 22px;
+}
+.signin-prompt p { margin: 0 0 10px; }
+.signin-prompt p:last-child { margin: 0; }
+
+.comment-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 18px;
+}
+
+.comment {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 11px;
+}
+.comment .avatar { flex: none; }
+
+.comment-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+.comment-name { font-weight: 600; font-size: 14px; color: var(--text); }
+a.comment-name:hover { color: var(--accent); }
+.time-ago { font-size: 12px; color: var(--muted); }
+.comment-text {
+    margin: 3px 0 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    max-width: 68ch;
+}
+
+/* ── states ──────────────────────────────────────────────────────────────── */
+
+.state-box {
+    max-width: 520px;
+    margin: 60px auto;
+    text-align: center;
+}
+.state-box h1 { font-size: 24px; margin: 0 0 8px; }
+.state-box p { margin: 0 0 18px; }
+
+.offscreen {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* The shared nav from site.js is one non-wrapping row, which is wider than a
+   phone; let it wrap into two rows so the page never scrolls sideways.
+   (Same treatment as the gallery page.) */
+@media (max-width: 720px) {
+    .nav-inner { flex-wrap: wrap; gap: 8px 10px; padding: 8px 16px; }
+    .nav-brand { font-size: 15px; }
+    .nav-link { font-size: 13px; }
+    .nav-user .btn { padding: 5px 9px; font-size: 12px; }
+    .nav-spacer { display: none; }
+    .nav-user { margin-left: auto; }
+    /* Search drops to its own full-width line under the links. */
+    .nav-search { order: 9; flex: 1 1 100%; max-width: none; min-width: 0; }
+}
+
+@media (max-width: 700px) {
+    .view-stage { aspect-ratio: 4 / 3; border-radius: 12px; }
+    .view-title { font-size: 22px; }
+    .actions .btn { flex: 1 1 auto; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .stage-poster, .stage-note { transition: none; }
+}
