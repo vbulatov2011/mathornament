@@ -14,8 +14,7 @@
   "kv_namespaces": [
     {
       "binding": "PRESETS",
-      // placeholder for local dev; replaced with the real namespace id at deploy time
-      "id": "00000000000000000000000000000000"
+      "id": "8e20fd35172c432e8bde12bed9f8dd28"
     }
   ],
   "vars": {
